@@ -7,8 +7,8 @@
   
   tasks:
     - name: Create EC2
-      ec2:
-        name: "ec2_using_ansible"
+      amazon.aws.ec2_instance:
+        name: "ec2UsingAnsible"
         aws_access_key_id: "{{ aws_access_key_id }}"
         aws_secret_key: "{{ aws_secret_key }}"
         key_name: ansibleKey
@@ -18,7 +18,7 @@
         region: "{{ region }}"
 
     - name: Create VPC
-      vpc: 
+      amazon.aws.ec2_vpc_net:
         name: "vpcUsingAnsible"
         cidr_block: "{{ vpc_cidr_block }}"
         region: "{{ region }}"
@@ -29,7 +29,7 @@
         msg: "The vpc id is {{ my_vpc.vpc.id }}"
 
     - name: Create subnet
-      vpc_subnet:
+      amazon.aws.ec2_vpc_subnet:
         state: present
         vpc_id: "{{ my_vpc.vpc.id }}"
         cidr: "{{ subnet_cidr_block }}"
@@ -41,16 +41,29 @@
         msg: "The subnet id is {{ my_subnet.subnet.id }}"
 
     - name: Create security group
-      my_securitygroup:
+      amazon.aws.ec2_security_group:
         name: "securitygroupusingansible"
         description: "My security group"
         vpc_id: "{{ my_vpc.vpc.id }}"
         region: "{{ region }}"
         rules:
           - proto: tcp
-            ports: “ {{ security_group_port }”
-            cidr_ip: “{{ security_group_cidr_inbound }}”
+            ports: "{{ security_group_port }}"
+            cidr_ip: "{{ security_group_cidr_inbound }}"
         rules_egress:
           - proto: all
-            cidr_ip: “{{ security_group_cidr_outbound }}”
+            cidr_ip: "{{ security_group_cidr_outbound }}"
       register: security_group
+
+    - name: Create S3 bucket with versioning
+      amazon.aws.s3_bucket:
+        name: "bucket-using-ansible-dev"
+        state: present
+        versioning: true
+        region: "{{ region }}"
+
+    - name: Upload objects in bucket
+      amazon.aws.aws_s3:
+        bucket: bucket-using-ansible-dev
+        src: /home/ubuntu/ansible_ss.png
+        mode: put
