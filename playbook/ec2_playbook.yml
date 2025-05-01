@@ -1,0 +1,56 @@
+- name: Create EC2 and VPC for aws resources
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - secrets.yml
+    - var.yml
+  
+  tasks:
+    - name: Create EC2
+      ec2:
+        name: "ec2_using_ansible"
+        aws_access_key_id: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        key_name: ansibleKey
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami_id }}"
+        wait: yes
+        region: "{{ region }}"
+
+    - name: Create VPC
+      vpc: 
+        name: "vpcUsingAnsible"
+        cidr_block: "{{ vpc_cidr_block }}"
+        region: "{{ region }}"
+      register: my_vpc
+    
+    - name: Output VPC
+      debug:
+        msg: "The vpc id is {{ my_vpc.vpc.id }}"
+
+    - name: Create subnet
+      vpc_subnet:
+        state: present
+        vpc_id: "{{ my_vpc.vpc.id }}"
+        cidr: "{{ subnet_cidr_block }}"
+        region: "{{ region }}"
+      register: my_subnet
+
+    - name: Output Subnet Id
+      debug:
+        msg: "The subnet id is {{ my_subnet.subnet.id }}"
+
+    - name: Create security group
+      my_securitygroup:
+        name: "securitygroupusingansible"
+        description: "My security group"
+        vpc_id: "{{ my_vpc.vpc.id }}"
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            ports: “ {{ security_group_port }”
+            cidr_ip: “{{ security_group_cidr_inbound }}”
+        rules_egress:
+          - proto: all
+            cidr_ip: “{{ security_group_cidr_outbound }}”
+      register: security_group
