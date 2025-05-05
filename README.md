@@ -63,10 +63,10 @@ Follow these steps to set up Ansible and configure your EC2 instance:
 Below are the snapshot after running the ansible playbook
 
 1. After running the ansible command:
-   ![ec2_using_ansible](https://github.com/user-attachments/assets/27045f58-37a9-459c-afd6-6164c2cc5b73)
-
-2. EC2 Instance got created successfully:
    ![instance](https://github.com/user-attachments/assets/f2a48661-3629-41a8-b535-80b7c05fce9c)
 
-3. S3 bucket created with object upload:
+2. EC2 Instance got created successfully:
+   ![ec2_using_ansible](https://github.com/user-attachments/assets/27045f58-37a9-459c-afd6-6164c2cc5b73)
+
+4. S3 bucket created with object upload:
    ![s3_using_ansible](https://github.com/user-attachments/assets/aaae5b39-011e-414b-8403-83232c67358f)
