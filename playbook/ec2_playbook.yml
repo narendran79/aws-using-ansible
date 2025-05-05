@@ -1,44 +1,29 @@
-- name: Create EC2 and VPC for aws resources
+---
+- name: Setup AWS Infrastructure with Ansible
   hosts: localhost
   gather_facts: false
-  vars_files:
-    - secrets.yml
-    - var.yml
-  
-  tasks:
-    - name: Create EC2
-      amazon.aws.ec2_instance:
-        name: "ec2UsingAnsible"
-        aws_access_key_id: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        key_name: ansibleKey
-        instance_type: "{{ instance_type }}"
-        image: "{{ ami_id }}"
-        wait: yes
-        region: "{{ region }}"
+  vars_files:  #suppose if you don't want any variable file, you can directly hardcode it
+    - /path/to/secrets.yml
+    - /path/to/var.yml
 
+#These ansible task will help us to create vpc, ec2 instance and s3 bucket with versioning enabled.
+  tasks:
     - name: Create VPC
       amazon.aws.ec2_vpc_net:
         name: "vpcUsingAnsible"
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_key }}"
         cidr_block: "{{ vpc_cidr_block }}"
         region: "{{ region }}"
       register: my_vpc
-    
-    - name: Output VPC
-      debug:
-        msg: "The vpc id is {{ my_vpc.vpc.id }}"
 
     - name: Create subnet
       amazon.aws.ec2_vpc_subnet:
-        state: present
+        name: ""
         vpc_id: "{{ my_vpc.vpc.id }}"
         cidr: "{{ subnet_cidr_block }}"
         region: "{{ region }}"
       register: my_subnet
-
-    - name: Output Subnet Id
-      debug:
-        msg: "The subnet id is {{ my_subnet.subnet.id }}"
 
     - name: Create security group
       amazon.aws.ec2_security_group:
@@ -55,15 +40,33 @@
             cidr_ip: "{{ security_group_cidr_outbound }}"
       register: security_group
 
+#Creating instance with ubuntu as a base image
+    - name: Create EC2 instance
+      amazon.aws.ec2_instance:
+        name: "ec2UsingAnsible"
+        aws_access_key_id: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        key_name: ansibleKey
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ami_id }}"
+        wait: yes
+        region: "{{ region }}"
+        vpc_subnet_id: "{{ my_subnet.subnet.id }}"
+        security_group: "{{ security_group.group_id }}"
+
     - name: Create S3 bucket with versioning
       amazon.aws.s3_bucket:
-        name: "bucket-using-ansible-dev"
+        name: "your-unique-name-bucket-name"
         state: present
         versioning: true
         region: "{{ region }}"
 
-    - name: Upload objects in bucket
+#Upload the object to the S3 bucket 
+    - name: Upload object to S3
       amazon.aws.aws_s3:
-        bucket: bucket-using-ansible-dev
-        src: /home/ubuntu/ansible_ss.png
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        bucket: "your-unique-name-bucket-name"
         mode: put
+        object: "file.png"
+        src: "/path/to/file.png"
