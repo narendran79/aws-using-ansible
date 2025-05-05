@@ -1,0 +1,11 @@
+#Make sure the attribute values are correct and compatiable with aws
+region: us-east-1
+instance_type: t2.micro
+ami_id: ami-084568db4383264d4
+vpc_cidr_block: 10.0.0.0/24
+subnet_cidr_block: 10.0.0.0/24
+security_group_cidr_inbound : 0.0.0.0/0
+security_group_cidr_outbound : 0.0.0.0/0
+security_group_port:
+   - 80
+   - 443
